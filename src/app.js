@@ -1,23 +1,28 @@
-import * as THREE from '../node_modules/three/build/three.module.js';
+import * as THREE from '../libs/three/build/three.module.js';
+import {OrbitControls} from '../libs/three/jsm/controls/OrbitControls.js';
+
+const canvas = document.querySelector('#c');
+const renderer = new THREE.WebGLRenderer({canvas: canvas});
+
+let camera, scene;
 
 function main() {
-    const canvas = document.querySelector('#c');
-    const renderer = new THREE.WebGLRenderer({canvas: canvas});
+    document.body.appendChild( renderer.domElement );
     renderer.setClearColor(0xaaaaaa);
     renderer.shadowMap.enabled = true;
 
-    function makeCamera(fov = 40) {
-        const aspect = 2;  // the canvas default
-        const zNear = 0.1;
-        const zFar = 1000;
-        return new THREE.PerspectiveCamera(fov, aspect, zNear, zFar);
-    }
-
-    const camera = makeCamera();
-    camera.position.set(8, 8, 8).multiplyScalar(3);
+    const fov = 75;
+    const aspect = 2;
+    const zNear = 0.1;
+    const zFar = 1000;
+    camera = new THREE.PerspectiveCamera(fov, aspect, zNear, zFar);
+    camera.position.set(4, 8, 4).multiplyScalar(3);
     camera.lookAt(0, 0, 0);
 
-    const scene = new THREE.Scene();
+    const controls = new OrbitControls( camera, renderer.domElement );
+    controls.update();
+
+    scene = new THREE.Scene();
 
     {
         const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -43,40 +48,69 @@ function main() {
         scene.add(light);
     }
 
-    const groundGeometry = new THREE.PlaneGeometry(50, 50);
-    const groundMaterial = new THREE.MeshPhongMaterial({color: 0xCC8866});
-    const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
-    groundMesh.rotation.x = Math.PI * -.5;
-    groundMesh.receiveShadow = true;
-    scene.add(groundMesh);
-
-    function resizeRendererToDisplaySize(renderer) {
-        const canvas = renderer.domElement;
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight;
-        const needResize = canvas.width !== width || canvas.height !== height;
-        if (needResize) {
-            renderer.setSize(width, height, false);
-        }
-        return needResize;
+    {
+        const light = new THREE.DirectionalLight(0xffffff, 0.4);
+        light.position.set(0, -5, 0);
+        light.rotation.x = Math.PI * 0.5;
+        scene.add(light);
     }
 
-    function render(time) {
-        time *= 0.001;
+    const groundGeometryPlane = new THREE.PlaneGeometry(5, 25);
+    const groundGeometryCurve = new THREE.RingGeometry(
+        3, 8,
+        18, 2,
+        0, Math.PI * 0.5
+    );
+    const groundMaterial = new THREE.MeshPhongMaterial({color: 0xCC8866, side: THREE.DoubleSide});
 
-        groundMesh.position.set(time, 2 * time, 3 * time);
 
-        if (resizeRendererToDisplaySize(renderer)) {
-            camera.aspect = canvas.clientWidth / canvas.clientHeight;
-            camera.updateProjectionMatrix();
-        }
+    const groundMesh1 = new THREE.Mesh(groundGeometryPlane, groundMaterial);
+    groundMesh1.rotation.x = Math.PI * -.5;
+    groundMesh1.receiveShadow = true;
+    groundMesh1.position.set(-5.5, 0, -18);
+    scene.add(groundMesh1);
 
-        renderer.render(scene, camera);
+    const groundMesh2 = new THREE.Mesh(groundGeometryPlane, groundMaterial);
+    groundMesh2.rotation.x = Math.PI * -.5;
+    groundMesh2.receiveShadow = true;
+    groundMesh2.position.set(5.5, 0, 18);
+    scene.add(groundMesh2);
 
-        requestAnimationFrame(render);
-    }
+    const groundMesh3 = new THREE.Mesh(groundGeometryCurve, groundMaterial);
+    groundMesh3.rotation.x = Math.PI * -.5;
+    groundMesh3.position.z = 5.5;
+    scene.add(groundMesh3);
+
+    const groundMesh4 = new THREE.Mesh(groundGeometryCurve, groundMaterial);
+    groundMesh4.rotation.x = Math.PI * -.5;
+    groundMesh4.rotation.z = Math.PI * -1;
+    groundMesh4.position.z = -5.5;
+    scene.add(groundMesh4);
 
     requestAnimationFrame(render);
+}
+
+function render() {
+
+    if (resizeRendererToDisplaySize(renderer)) {
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+    }
+
+    renderer.render(scene, camera);
+
+    requestAnimationFrame(render);
+}
+
+function resizeRendererToDisplaySize(renderer) {
+    const canvas = renderer.domElement;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const needResize = canvas.width !== width || canvas.height !== height;
+    if (needResize) {
+        renderer.setSize(width, height, false);
+    }
+    return needResize;
 }
 
 main();
