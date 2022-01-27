@@ -6,6 +6,12 @@ const renderer = new THREE.WebGLRenderer({canvas: canvas});
 
 let camera, scene;
 
+let curve;
+
+let enemyMesh, enemyPosition, enemyTarget;
+
+const time = new THREE.Clock();
+
 function main() {
     document.body.appendChild( renderer.domElement );
     renderer.setClearColor(0xaaaaaa);
@@ -55,6 +61,14 @@ function main() {
         scene.add(light);
     }
 
+    const enemyGeometry = new THREE.BoxGeometry(3, 3, 3);
+    const enemyMaterial = new THREE.MeshPhongMaterial({color: 0xFF0000});
+    enemyMesh = new THREE.Mesh(enemyGeometry, enemyMaterial);
+    scene.add(enemyMesh);
+
+    enemyPosition = new THREE.Vector2();
+    enemyTarget = new THREE.Vector2();
+
     const groundGeometryPlane = new THREE.PlaneGeometry(5, 25);
     const groundGeometryCurve = new THREE.RingGeometry(
         3, 8,
@@ -87,15 +101,37 @@ function main() {
     groundMesh4.position.z = -5.5;
     scene.add(groundMesh4);
 
+    curve = new THREE.SplineCurve( [
+        new THREE.Vector2( 5.5, 30 ),
+        new THREE.Vector2( 5.0, 3),
+        new THREE.Vector2( -5.0, -3),
+        new THREE.Vector2( -5.5, -30 ),
+    ] );
+
+    const points = curve.getPoints( 50 );
+    const geometry = new THREE.BufferGeometry().setFromPoints( points );
+    const material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    const splineObject = new THREE.Line( geometry, material );
+    splineObject.rotation.x = Math.PI * .5;
+    splineObject.position.y = 0.5;
+    scene.add(splineObject);
+
+
     requestAnimationFrame(render);
 }
 
 function render() {
+    let elapsedTime = time.getElapsedTime() * 0.25;
 
     if (resizeRendererToDisplaySize(renderer)) {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
     }
+
+    curve.getPointAt(elapsedTime % 1, enemyPosition);
+    curve.getPointAt((elapsedTime + 0.01) % 1, enemyTarget);
+    enemyMesh.position.set(enemyPosition.x, 2, enemyPosition.y);
+    enemyMesh.lookAt(enemyTarget.x, 0, enemyTarget.y);
 
     renderer.render(scene, camera);
 
