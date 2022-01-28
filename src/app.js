@@ -12,26 +12,38 @@ let enemyMesh, enemyPosition, enemyTarget;
 
 let groundPathParent;
 
-let ray = new THREE.Vector3(0, 3, 0);
-let rayDir = new THREE.Vector3(0, -1, 0);
+let rayDirection = new THREE.Vector3();
+let rayFar = new THREE.Vector3();
+
+let rayLine = undefined;
+
+let raycasterGround = new THREE.Raycaster();
 
 const time = new THREE.Clock();
 
-function raycast(p, dir) {
-    let raycaster = new THREE.Raycaster();
-    raycaster.set(p, dir);
+function raycast(rayOrigin, rayDestination) {
+    raycasterGround.set(rayOrigin, rayDirection.subVectors(rayDestination, rayOrigin).normalize());
+    raycasterGround.far = rayFar.subVectors(rayDestination, rayOrigin).length();
 
+    function addRayLine() {
+        if (rayLine) {
+            scene.remove(rayLine);
+        }
 
-    const materialLine = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
-    const pointsLine = [];
-    pointsLine.push(p);
-    pointsLine.push(p.clone().set(dir.x * 5, dir.y * 5, dir.z * 5));
+        const pointsLine = [rayOrigin, rayDestination];
 
-    const geometryLine = new THREE.BufferGeometry().setFromPoints( pointsLine );
-    const line = new THREE.Line( geometryLine, materialLine );
-    scene.add( line );
+        rayLine = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints( pointsLine ),
+            new THREE.LineBasicMaterial( { color: 0x00ff00 })
+        );
 
-    return raycaster.intersectObjects( groundPathParent.children );
+        scene.add(rayLine);
+
+    }
+
+    addRayLine()
+
+    return raycasterGround.intersectObjects( [enemyMesh] ); // TODO remove array later
 }
 
 function main() {
@@ -39,16 +51,18 @@ function main() {
     renderer.setClearColor(0xaaaaaa);
     renderer.shadowMap.enabled = true;
 
-    const fov = 75;
-    const aspect = 2;
-    const zNear = 0.1;
-    const zFar = 1000;
-    camera = new THREE.PerspectiveCamera(fov, aspect, zNear, zFar);
-    camera.position.set(4, 8, 4).multiplyScalar(3);
-    camera.lookAt(0, 0, 0);
+    {
+        const fov = 75;
+        const aspect = 2;
+        const zNear = 0.1;
+        const zFar = 1000;
+        camera = new THREE.PerspectiveCamera(fov, aspect, zNear, zFar);
+        camera.position.set(4, 8, 4).multiplyScalar(3);
+        camera.lookAt(0, 0, 0);
 
-    const controls = new OrbitControls( camera, renderer.domElement );
-    controls.update();
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.update();
+    }
 
     scene = new THREE.Scene();
 
@@ -101,24 +115,26 @@ function main() {
 
     groundPathParent = new THREE.Group();
 
-    const groundMesh1 = new THREE.Mesh(groundGeometryPlane, groundMaterial);
-    groundMesh1.rotation.x = Math.PI * -.5;
+    const groundMesh1 = new THREE.Mesh(groundGeometryPlane, groundMaterial.clone());
     groundMesh1.receiveShadow = true;
+    groundMesh1.rotation.x = Math.PI * -.5;
     groundMesh1.position.set(-5.5, 0, -18);
     groundPathParent.add(groundMesh1);
 
-    const groundMesh2 = new THREE.Mesh(groundGeometryPlane, groundMaterial);
-    groundMesh2.rotation.x = Math.PI * -.5;
+    const groundMesh2 = new THREE.Mesh(groundGeometryPlane, groundMaterial.clone());
     groundMesh2.receiveShadow = true;
+    groundMesh2.rotation.x = Math.PI * -.5;
     groundMesh2.position.set(5.5, 0, 18);
     groundPathParent.add(groundMesh2);
 
-    const groundMesh3 = new THREE.Mesh(groundGeometryCurve, groundMaterial);
+    const groundMesh3 = new THREE.Mesh(groundGeometryCurve, groundMaterial.clone());
+    groundMesh2.receiveShadow = true;
     groundMesh3.rotation.x = Math.PI * -.5;
     groundMesh3.position.z = 5.5;
     groundPathParent.add(groundMesh3);
 
-    const groundMesh4 = new THREE.Mesh(groundGeometryCurve, groundMaterial);
+    const groundMesh4 = new THREE.Mesh(groundGeometryCurve, groundMaterial.clone());
+    groundMesh2.receiveShadow = true;
     groundMesh4.rotation.x = Math.PI * -.5;
     groundMesh4.rotation.z = Math.PI * -1;
     groundMesh4.position.z = -5.5;
@@ -147,11 +163,14 @@ function main() {
 function render() {
     let elapsedTime = time.getElapsedTime() * 0.25;
 
-    let intersects = raycast(ray, rayDir);
+    let rayOrigin = new THREE.Vector3(0, 5, 0);
+    let rayDestination = new THREE.Vector3(0, -5, 0);
+
+    let intersects = raycast(rayOrigin, rayDestination);
 
     for ( let i = 0; i < intersects.length; i ++ ) {
 
-        intersects[ i ].object.material.color.set( 0xffffff );
+        intersects[ i ].object.material.color.set( Math.random() * 0xffffff );
 
     }
 
