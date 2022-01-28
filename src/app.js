@@ -12,7 +12,27 @@ let enemyMesh, enemyPosition, enemyTarget;
 
 let groundPathParent;
 
+let ray = new THREE.Vector3(0, 3, 0);
+let rayDir = new THREE.Vector3(0, -1, 0);
+
 const time = new THREE.Clock();
+
+function raycast(p, dir) {
+    let raycaster = new THREE.Raycaster();
+    raycaster.set(p, dir);
+
+
+    const materialLine = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
+    const pointsLine = [];
+    pointsLine.push(p);
+    pointsLine.push(p.clone().set(dir.x * 5, dir.y * 5, dir.z * 5));
+
+    const geometryLine = new THREE.BufferGeometry().setFromPoints( pointsLine );
+    const line = new THREE.Line( geometryLine, materialLine );
+    scene.add( line );
+
+    return raycaster.intersectObjects( groundPathParent.children );
+}
 
 function main() {
     document.body.appendChild( renderer.domElement );
@@ -121,29 +141,13 @@ function main() {
     splineObject.position.y = 0.5;
     scene.add(splineObject);
 
-    const materialLine = new THREE.LineBasicMaterial( { color: 0x0000ff } );
-    const pointsLine = [];
-    pointsLine.push( new THREE.Vector3( 0, 3, 0 ) );
-    pointsLine.push( new THREE.Vector3( 0, 10, 0 ) );
-
-    const geometryLine = new THREE.BufferGeometry().setFromPoints( pointsLine );
-    const line = new THREE.Line( geometryLine, materialLine );
-    scene.add( line );
-
     requestAnimationFrame(render);
 }
 
 function render() {
     let elapsedTime = time.getElapsedTime() * 0.25;
 
-    let raycaster = new THREE.Raycaster();
-
-    raycaster.set(
-        new THREE.Vector3(0, 3, 0),
-        new THREE.Vector3(0, -100, 0)
-    )
-
-    let intersects = raycaster.intersectObjects( scene.children );
+    let intersects = raycast(ray, rayDir);
 
     for ( let i = 0; i < intersects.length; i ++ ) {
 
