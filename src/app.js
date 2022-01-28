@@ -10,6 +10,9 @@ let camera, scene;
 
 let curve;
 
+let grid = [];
+let gridGroup = new THREE.Group();
+
 let enemyMesh, enemyPosition, enemyTarget;
 let flag = true;
 
@@ -44,7 +47,7 @@ function raycast(rayOrigin, rayDestination) {
 
     }
 
-    addRayLine()
+    //addRayLine()
 
     return raycasterGround.intersectObject( groundPathParent ); // TODO remove array later
 }
@@ -178,11 +181,11 @@ function main() {
         scene.add(mesh);
     }
 
-    requestAnimationFrame(render);
+    render();
 }
 
 function render() {
-    let elapsedTime = time.getElapsedTime() * 0.25;
+    let elapsedTime = time.getElapsedTime();
 
     if (resizeRendererToDisplaySize(renderer)) {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
@@ -190,28 +193,74 @@ function render() {
     }
 
     if (flag) {
-        let rayOrigin = new THREE.Vector3();
-        let rayDestination = new THREE.Vector3();
+        const rayOrigin = new THREE.Vector3();
+        const rayDestination = new THREE.Vector3();
 
-        for (let ix = -15; ix <= 15; ix++) {
-            for (let iz = -35; iz <= 35; iz++) {
-                rayOrigin.set(ix, 5, iz);
-                rayDestination.set(ix, -5, iz);
+        const gridGeometry = new THREE.PlaneGeometry();
+        let gridMesh;
+
+        function newGridMaterial( hit ) {
+            const c = new THREE.MeshPhongMaterial({side: THREE.DoubleSide});
+
+            if ( hit ) {
+                c.color = new THREE.Color(0, 1, 0);
+            } else {
+                c.color = new THREE.Color(1, 0, 0);
+            }
+
+            return c
+        }
+
+        let hit = false;
+        let gridLine;
+
+        for (let iz = -35, diz; iz <= 35; iz++) {
+            gridLine = [];
+            for (let ix = -15, dix; ix <= 15; ix++) {
+                dix = ix * 1.01
+                diz = iz * 1.01
+
+                rayOrigin.set(dix, 5, diz);
+                rayDestination.set(dix, -5, diz);
 
                 let intersects = raycast(rayOrigin, rayDestination);
 
-                for ( let i = 0; i < intersects.length; i ++ ) {
-
+                if ( intersects.length ) {
+                    hit = true;
                     flag = false;
-                    intersects[ i ].object.material.color.set( Math.random() * 0xffffff );
-
                 }
+
+                gridMesh = new THREE.Mesh(
+                    gridGeometry,
+                    newGridMaterial(hit)
+                );
+
+                gridMesh.position.set(dix, -2 + elapsedTime * 50, diz);
+                gridMesh.rotation.x = Math.PI * -0.5
+
+                gridGroup.add(gridMesh);
+
+                gridLine.push(
+                    {
+                        'position': {
+                            'x': ix,
+                            'z': iz
+                        },
+                        'hit': hit
+                    }
+                )
+
+                hit = false;
             }
+            grid.push(gridLine)
         }
+        scene.add(gridGroup);
+
+        console.log(grid)
     }
 
-    curve.getPointAt(elapsedTime % 1, enemyPosition);
-    curve.getPointAt((elapsedTime + 0.01) % 1, enemyTarget);
+    curve.getPointAt(elapsedTime * 0.25 % 1, enemyPosition);
+    curve.getPointAt((elapsedTime * 0.25 + 0.01) % 1, enemyTarget);
     enemyMesh.position.set(enemyPosition.x, 2, enemyPosition.y);
     enemyMesh.lookAt(enemyTarget.x, 2, enemyTarget.y);
 
