@@ -8,7 +8,9 @@ GENRE: Tower Defense
 
 ### TODO
 
+- [ ] create grid
+- [ ] implement A* algorithm
 - [ ] add walking model
-- [ ] create path
+- [x] create path
 - [ ] add incoming enemies / wave
 - [ ] add turrets
