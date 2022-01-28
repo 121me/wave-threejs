@@ -1,6 +1,8 @@
 import * as THREE from '../libs/three/build/three.module.js';
 import {OrbitControls} from '../libs/three/jsm/controls/OrbitControls.js';
 
+import {heap} from "./algo.js";
+
 const canvas = document.querySelector('#c');
 const renderer = new THREE.WebGLRenderer({canvas: canvas});
 
@@ -9,6 +11,7 @@ let camera, scene;
 let curve;
 
 let enemyMesh, enemyPosition, enemyTarget;
+let flag = true;
 
 let groundPathParent;
 
@@ -43,7 +46,7 @@ function raycast(rayOrigin, rayDestination) {
 
     addRayLine()
 
-    return raycasterGround.intersectObjects( [enemyMesh] ); // TODO remove array later
+    return raycasterGround.intersectObject( groundPathParent ); // TODO remove array later
 }
 
 function main() {
@@ -111,51 +114,69 @@ function main() {
         18, 2,
         0, Math.PI * 0.5
     );
-    const groundMaterial = new THREE.MeshPhongMaterial({color: 0xCC8866, side: THREE.DoubleSide});
 
+    const groundMaterial = new THREE.MeshPhongMaterial({color: 0xCC8866, side: THREE.DoubleSide});
     groundPathParent = new THREE.Group();
 
-    const groundMesh1 = new THREE.Mesh(groundGeometryPlane, groundMaterial.clone());
-    groundMesh1.receiveShadow = true;
-    groundMesh1.rotation.x = Math.PI * -.5;
-    groundMesh1.position.set(-5.5, 0, -18);
-    groundPathParent.add(groundMesh1);
+    {
+        const groundMesh = new THREE.Mesh(groundGeometryPlane, groundMaterial.clone());
+        groundMesh.receiveShadow = true;
+        groundMesh.rotation.x = Math.PI * -.5;
+        groundMesh.position.set(-5.5, 0, -18);
+        groundPathParent.add(groundMesh);
+    }
 
-    const groundMesh2 = new THREE.Mesh(groundGeometryPlane, groundMaterial.clone());
-    groundMesh2.receiveShadow = true;
-    groundMesh2.rotation.x = Math.PI * -.5;
-    groundMesh2.position.set(5.5, 0, 18);
-    groundPathParent.add(groundMesh2);
+    {
+        const groundMesh = new THREE.Mesh(groundGeometryPlane, groundMaterial.clone());
+        groundMesh.receiveShadow = true;
+        groundMesh.rotation.x = Math.PI * -.5;
+        groundMesh.position.set(5.5, 0, 18);
+        groundPathParent.add(groundMesh);
+    }
 
-    const groundMesh3 = new THREE.Mesh(groundGeometryCurve, groundMaterial.clone());
-    groundMesh2.receiveShadow = true;
-    groundMesh3.rotation.x = Math.PI * -.5;
-    groundMesh3.position.z = 5.5;
-    groundPathParent.add(groundMesh3);
+    {
+        const groundMesh = new THREE.Mesh(groundGeometryCurve, groundMaterial.clone());
+        groundMesh.receiveShadow = true;
+        groundMesh.rotation.x = Math.PI * -.5;
+        groundMesh.position.z = 5.5;
+        groundPathParent.add(groundMesh);
+    }
 
-    const groundMesh4 = new THREE.Mesh(groundGeometryCurve, groundMaterial.clone());
-    groundMesh2.receiveShadow = true;
-    groundMesh4.rotation.x = Math.PI * -.5;
-    groundMesh4.rotation.z = Math.PI * -1;
-    groundMesh4.position.z = -5.5;
-    groundPathParent.add(groundMesh4);
+    {
+        const groundMesh = new THREE.Mesh(groundGeometryCurve, groundMaterial.clone());
+        groundMesh.receiveShadow = true;
+        groundMesh.rotation.x = Math.PI * -.5;
+        groundMesh.rotation.z = Math.PI * -1;
+        groundMesh.position.z = -5.5;
+        groundPathParent.add(groundMesh);
+    }
 
     scene.add(groundPathParent);
 
-    curve = new THREE.SplineCurve( [
-        new THREE.Vector2( 5.5, 30 ),
-        new THREE.Vector2( 5.0, 3),
-        new THREE.Vector2( -5.0, -3),
-        new THREE.Vector2( -5.5, -30 ),
-    ] );
+    {
+        curve = new THREE.SplineCurve([
+            new THREE.Vector2(5.5, 30),
+            new THREE.Vector2(5.0, 3),
+            new THREE.Vector2(-5.0, -3),
+            new THREE.Vector2(-5.5, -30),
+        ]);
 
-    const points = curve.getPoints( 50 );
-    const geometry = new THREE.BufferGeometry().setFromPoints( points );
-    const material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-    const splineObject = new THREE.Line( geometry, material );
-    splineObject.rotation.x = Math.PI * .5;
-    splineObject.position.y = 0.5;
-    scene.add(splineObject);
+        const points = curve.getPoints(50);
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({color: 0xff0000});
+        const splineObject = new THREE.Line(geometry, material);
+        splineObject.rotation.x = Math.PI * .5;
+        splineObject.position.y = 0.5;
+        scene.add(splineObject);
+    }
+
+    {
+        const geometry = new THREE.BoxGeometry(3, 3, 3);
+        const material = new THREE.MeshStandardMaterial({color: 0x000000});
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(15, 0, -35)
+        scene.add(mesh);
+    }
 
     requestAnimationFrame(render);
 }
@@ -163,26 +184,36 @@ function main() {
 function render() {
     let elapsedTime = time.getElapsedTime() * 0.25;
 
-    let rayOrigin = new THREE.Vector3(0, 5, 0);
-    let rayDestination = new THREE.Vector3(0, -5, 0);
-
-    let intersects = raycast(rayOrigin, rayDestination);
-
-    for ( let i = 0; i < intersects.length; i ++ ) {
-
-        intersects[ i ].object.material.color.set( Math.random() * 0xffffff );
-
-    }
-
     if (resizeRendererToDisplaySize(renderer)) {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
     }
 
+    if (flag) {
+        let rayOrigin = new THREE.Vector3();
+        let rayDestination = new THREE.Vector3();
+
+        for (let ix = -15; ix <= 15; ix++) {
+            for (let iz = -35; iz <= 35; iz++) {
+                rayOrigin.set(ix, 5, iz);
+                rayDestination.set(ix, -5, iz);
+
+                let intersects = raycast(rayOrigin, rayDestination);
+
+                for ( let i = 0; i < intersects.length; i ++ ) {
+
+                    flag = false;
+                    intersects[ i ].object.material.color.set( Math.random() * 0xffffff );
+
+                }
+            }
+        }
+    }
+
     curve.getPointAt(elapsedTime % 1, enemyPosition);
     curve.getPointAt((elapsedTime + 0.01) % 1, enemyTarget);
     enemyMesh.position.set(enemyPosition.x, 2, enemyPosition.y);
-    enemyMesh.lookAt(enemyTarget.x, 0, enemyTarget.y);
+    enemyMesh.lookAt(enemyTarget.x, 2, enemyTarget.y);
 
     renderer.render(scene, camera);
 
