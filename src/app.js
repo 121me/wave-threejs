@@ -10,6 +10,8 @@ let curve;
 
 let enemyMesh, enemyPosition, enemyTarget;
 
+let groundPathParent;
+
 const time = new THREE.Clock();
 
 function main() {
@@ -77,29 +79,32 @@ function main() {
     );
     const groundMaterial = new THREE.MeshPhongMaterial({color: 0xCC8866, side: THREE.DoubleSide});
 
+    groundPathParent = new THREE.Group();
 
     const groundMesh1 = new THREE.Mesh(groundGeometryPlane, groundMaterial);
     groundMesh1.rotation.x = Math.PI * -.5;
     groundMesh1.receiveShadow = true;
     groundMesh1.position.set(-5.5, 0, -18);
-    scene.add(groundMesh1);
+    groundPathParent.add(groundMesh1);
 
     const groundMesh2 = new THREE.Mesh(groundGeometryPlane, groundMaterial);
     groundMesh2.rotation.x = Math.PI * -.5;
     groundMesh2.receiveShadow = true;
     groundMesh2.position.set(5.5, 0, 18);
-    scene.add(groundMesh2);
+    groundPathParent.add(groundMesh2);
 
     const groundMesh3 = new THREE.Mesh(groundGeometryCurve, groundMaterial);
     groundMesh3.rotation.x = Math.PI * -.5;
     groundMesh3.position.z = 5.5;
-    scene.add(groundMesh3);
+    groundPathParent.add(groundMesh3);
 
     const groundMesh4 = new THREE.Mesh(groundGeometryCurve, groundMaterial);
     groundMesh4.rotation.x = Math.PI * -.5;
     groundMesh4.rotation.z = Math.PI * -1;
     groundMesh4.position.z = -5.5;
-    scene.add(groundMesh4);
+    groundPathParent.add(groundMesh4);
+
+    scene.add(groundPathParent);
 
     curve = new THREE.SplineCurve( [
         new THREE.Vector2( 5.5, 30 ),
@@ -116,12 +121,35 @@ function main() {
     splineObject.position.y = 0.5;
     scene.add(splineObject);
 
+    const materialLine = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+    const pointsLine = [];
+    pointsLine.push( new THREE.Vector3( 0, 3, 0 ) );
+    pointsLine.push( new THREE.Vector3( 0, 10, 0 ) );
+
+    const geometryLine = new THREE.BufferGeometry().setFromPoints( pointsLine );
+    const line = new THREE.Line( geometryLine, materialLine );
+    scene.add( line );
 
     requestAnimationFrame(render);
 }
 
 function render() {
     let elapsedTime = time.getElapsedTime() * 0.25;
+
+    let raycaster = new THREE.Raycaster();
+
+    raycaster.set(
+        new THREE.Vector3(0, 3, 0),
+        new THREE.Vector3(0, -100, 0)
+    )
+
+    let intersects = raycaster.intersectObjects( scene.children );
+
+    for ( let i = 0; i < intersects.length; i ++ ) {
+
+        intersects[ i ].object.material.color.set( 0xffffff );
+
+    }
 
     if (resizeRendererToDisplaySize(renderer)) {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
