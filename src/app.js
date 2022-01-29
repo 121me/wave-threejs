@@ -1,5 +1,6 @@
 import * as THREE from '../libs/three/build/three.module.js';
 import {OrbitControls} from '../libs/three/jsm/controls/OrbitControls.js';
+import {aStarSearch} from "./algo.js";
 
 const canvas = document.querySelector('#c');
 const renderer = new THREE.WebGLRenderer({canvas: canvas});
@@ -190,7 +191,8 @@ function render() {
         camera.updateProjectionMatrix();
     }
 
-    if (flag) {
+    // TODO return a start and an end node
+    if (flag && elapsedTime > 0.1) {
         const rayOrigin = new THREE.Vector3();
         const rayDestination = new THREE.Vector3();
 
@@ -218,14 +220,13 @@ function render() {
                 dix = ix * 1.01
                 diz = iz * 1.01
 
-                rayOrigin.set(dix, 5, diz);
-                rayDestination.set(dix, -5, diz);
+                rayOrigin.set(ix, 5, iz);
+                rayDestination.set(ix, -5, iz);
 
                 let intersects = raycast(rayOrigin, rayDestination);
 
                 if ( intersects.length ) {
                     hit = true;
-                    flag = false;
                 }
 
                 gridMesh = new THREE.Mesh(
@@ -233,7 +234,7 @@ function render() {
                     newGridMaterial(hit)
                 );
 
-                gridMesh.position.set(dix, -2 + elapsedTime * 50, diz);
+                gridMesh.position.set(dix, -0.1, diz);
                 gridMesh.rotation.x = Math.PI * -0.5
 
                 gridGroup.add(gridMesh);
@@ -255,6 +256,9 @@ function render() {
         scene.add(gridGroup);
 
         console.log(grid)
+        flag = false;
+
+        console.log(aStarSearch(grid, grid[7][7], grid[64][21]));
     }
 
     curve.getPointAt(elapsedTime * 0.25 % 1, enemyPosition);

@@ -17,10 +17,10 @@
 import Heap from '../node_modules/heap-js/dist/heap-js.es5.js';
 
 
-function compare(first, second) {
-    if (first.a > second.a) {
+function compare(first, second) { // Todo add comparison for H values for equality
+    if (first.F > second.F) {
         return 1;
-    } else if (first.a < second.a) {
+    } else if (first.F < second.F) {
         return -1;
     } else return 0;
 }
@@ -32,7 +32,7 @@ function aStarSearch(grid, start, end) {
         for (let j = 0; j < grid[0].length; j++) {
             let element = grid[i][j];
             if (element.hit === true) { // If the element is inside path // todo hit ?
-                element.H = euDist(element.pos, end.pos); //todo pos ?
+                element.H = euDist(element, end); //todo pos ?
                 element.G = Infinity;
                 element.i = i;
                 element.j = j;
@@ -49,7 +49,7 @@ function aStarSearch(grid, start, end) {
 
     do {
         // TODO when relaxing, how will i find the neighbours in heap to update it ?
-        for (const arr of getNeighborNumbers(curr.i, curr.j)) {
+        for (const arr of getNeighbors(curr.i, curr.j)) {
             let neighbor = grid
             if (neighbor.hit === true) { // If that neighbor is in the area (path)
                 // Do the relaxation
@@ -57,6 +57,8 @@ function aStarSearch(grid, start, end) {
                     neighbor.G = curr.G; // Update path distance
                     neighbor.F = neighbor.G + neighbor.H;
                     neighbor.prev = curr; // Update prev node
+
+                    // TODO we don't remove the old version of the node if it exists
                     heap.push(neighbor);
                 }
             }
@@ -76,7 +78,8 @@ function aStarSearch(grid, start, end) {
     return path;
 }
 
-function getNeighborNumbers(i, j, size) {
+// Return the neighboring nodes given a node
+function getNeighbors(i, j, size) {
     // Straight and diagonal distances
     const straight = 1;
     const diagonal = 1.4;
@@ -94,17 +97,22 @@ function getNeighborNumbers(i, j, size) {
     return arr;
 }
 
+// Add a node to the array if it is valid
 function addArr(i, j, size, dist, arr) {
     if (isInside(i, j, size)) {
         arr.push([i, j, dist]);
     }
 }
 
+// Check if 0 <= i, j < size
 function isInside(i, j, size) {
     return i < size && i >= 0 && j < size && j >= 0;
 }
 
+// Return the euclidean distance between two coordinates
 function euDist(a, b) {
-    return Math.sqrt(Math.pow(Math.abs(a.x - b.x), 2) + Math.pow(Math.abs(a.y - b.y), 2) +
-        Math.pow(Math.abs(a.z - b.z), 2)); // TODO make it in "a.coord.x" format
+    return Math.sqrt(Math.pow(Math.abs(a.position.x - b.position.x), 2) +
+        Math.pow(Math.abs(a.position.z - b.position.z), 2));
 }
+
+export {aStarSearch}
