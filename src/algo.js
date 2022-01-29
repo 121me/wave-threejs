@@ -16,18 +16,6 @@
 
 import Heap from '../node_modules/heap-js/dist/heap-js.es5.js';
 
-let minHeap = new Heap(compare);
-minHeap.push({a: "b"});
-minHeap.push({a: "c"});
-minHeap.push({a: "d"});
-minHeap.push({a: "c"});
-minHeap.push({a: "a"});
-
-console.log(minHeap.pop())
-console.log(minHeap.pop())
-console.log(minHeap.pop())
-console.log(minHeap.pop())
-console.log(minHeap.pop())
 
 function compare(first, second) {
     if (first.a > second.a) {
@@ -35,18 +23,6 @@ function compare(first, second) {
     } else if (first.a < second.a) {
         return -1;
     } else return 0;
-}
-
-let n = {
-    x:0,
-    y:0,
-    z:0
-}
-
-let m = {
-    x:3,
-    y:4,
-    z:12
 }
 
 
