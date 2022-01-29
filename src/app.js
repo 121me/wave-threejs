@@ -1,8 +1,6 @@
 import * as THREE from '../libs/three/build/three.module.js';
 import {OrbitControls} from '../libs/three/jsm/controls/OrbitControls.js';
 
-import {heap} from "./algo.js";
-
 const canvas = document.querySelector('#c');
 const renderer = new THREE.WebGLRenderer({canvas: canvas});
 
