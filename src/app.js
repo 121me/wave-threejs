@@ -174,7 +174,7 @@ function main() {
 
     render();
 
-    createGrid(700, 300, 0.1);
+    createGrid(70, 30, 1); // DO NOT DECREASE SIZE TOO MUCH
 }
 
 function createGrid(height = 70, width = 30, size = 1) {
