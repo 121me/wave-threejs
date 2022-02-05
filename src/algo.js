@@ -43,12 +43,14 @@ function aStarSearch(grid, start, end) {
     let heap = new Heap(compare); // todo
     let curr = start;
 
-    // From the start node, until we reach the end node, do this:
-    // 1- "Check" every neighbour of current node (Relax + add to heap)
-    // 2- Take the top element of heap
+    console.log("curr", curr);
 
+    // From the start node, until we reach the end node, do this:
+    // 1- "Check" every neighbor of current node (Relax + add to heap)
+    // 2- Take the top element of heap
     do {
         // TODO when relaxing, how will i find the neighbours in heap to update it ?
+
         for (const arr of getNeighbors(curr.i, curr.j)) {
             let neighbor = grid
             if (neighbor.hit === true) { // If that neighbor is in the area (path)

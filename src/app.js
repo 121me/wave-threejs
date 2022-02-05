@@ -174,7 +174,12 @@ function main() {
 
     render();
 
-    createGrid(70, 30, 1); // DO NOT DECREASE SIZE TOO MUCH
+    console.log(grid)
+
+    let g = createGrid(70, 30, 1); // DO NOT DECREASE SIZE TOO MUCH
+
+    console.log(aStarSearch(g, grid[8][8], grid[65][21]));
+
 }
 
 function createGrid(height = 70, width = 30, size = 1) {
@@ -241,6 +246,10 @@ function createGrid(height = 70, width = 30, size = 1) {
     }
 
     scene.add(gridGroup);
+
+    // TODO return a start and an end node
+
+    return grid;
 }
 
 function render() {
@@ -251,7 +260,6 @@ function render() {
         camera.updateProjectionMatrix();
     }
 
-    // TODO return a start and an end node
 
     curve.getPointAt(elapsedTime * 0.25 % 1, enemyPosition);
     curve.getPointAt((elapsedTime * 0.25 + 0.01) % 1, enemyTarget);
