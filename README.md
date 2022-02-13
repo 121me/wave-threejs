@@ -1,7 +1,7 @@
 # wave-threejs
 A game made in three.js
 
-## DEADLINE: 11.02.2022 - 23:59
+## PROJECT POSTPONED DUE TO MEMBERS BEING BUSY
 
 THEME: Medieval\
 GENRE: Tower Defense
